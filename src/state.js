@@ -15,4 +15,5 @@ export const init = (input, level, assets, canvas) => ({
   entities: [
     Entity.make('player', input),
   ],
+  projectiles: [],
 });

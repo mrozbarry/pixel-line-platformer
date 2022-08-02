@@ -39,30 +39,39 @@ export const step = (timestep, gravity, gameMap, entity) => {
     x: entity.p.x + (entity.v.x * timestep / 10),
     y: entity.p.y + (entity.v.y * timestep / 10),
   };
-  const horizontalMovement = entity.onGround ? (Number(keys.right) - Number(keys.left)) * 0.3 * timestep / 10 : 0;
+  const horizontalMovement = (Number(keys.right) - Number(keys.left)) * (entity.onGround ? 0.3 : 0.1) * timestep / 10;
   const v = {
     x: Math.max(Math.min(entity.v.x + horizontalMovement / (timestep / 10), MAX_SPEED), -MAX_SPEED),
-    y: entity.v.y + (gravity * timestep / 10) / (2 * timestep / 10),
+    y: entity.v.y + ((entity.onGround ? 0 : gravity) * timestep / 10) / (2 * timestep / 10),
   };
   let onGround = entity.onGround;
   let isJumping =  entity.isJumping;
 
   if (!keys.left && !keys.right) {
-    v.x *= 0.8 
+    v.x *= 0.8;
+  }
+  if (!onGround) {
+    v.x *= 0.98;
   }
   if (v.x < 0.05 && v.x > -0.05) {
     v.x = 0;
   }
+  if (onGround && v.y > 0) {
+    v.y = 0;
+  }
 
-  const mapPreviousPosition = getGameMapPosition(pp);
-  const mapPosition = getGameMapPosition(p);
-  if (gameMap[mapPosition.y]) {
-    //const previousTile = gameMap[mapPreviousPosition.y][mapPreviousPosition.x];
-    const tile = gameMap[mapPosition.y][mapPosition.x];
-    if (keys.left || keys.right) {
-      console.log('character on tile', entity.id, tile);
+  const previous = getGameMapPosition(pp);
+  const current = getGameMapPosition(p);
+
+  if (gameMap[current.y] && gameMap[previous.y] && v.y > 0 && !onGround) {
+    const currentTile = gameMap[current.y][current.x];
+    const previousTile = gameMap[previous.y][previous.x];
+    if (groundTiles.includes(currentTile) && !groundTiles.includes(previousTile)) {
+      onGround = true;
+      v.y = 0;
+      p.y = current.y * 16;
     }
-  } else if(!gameMap[mapPosition.y] && v.y > 0) {
+  } else if(!gameMap[current.y] && v.y > 0) {
     console.log('grounded');
     v.y = 0;
     p.y = gameMap.length * 16;
@@ -82,6 +91,17 @@ export const step = (timestep, gravity, gameMap, entity) => {
   if (isJumping && (!keys.up || v.y < -0.8)) {
     console.log('jumping done');
     isJumping = false;
+  }
+  if (gameMap[current.y] && gameMap[previous.y] && onGround && (keys.left || keys.right)) {
+    const currentTile = gameMap[current.y][current.x];
+    const previousTile = gameMap[previous.y][previous.x];
+    if (groundTiles.includes(currentTile) && !groundTiles.includes(previousTile)) {
+      onGround = true;
+      v.y = 0;
+      p.y = current.y * 16;
+    } else {
+      onGround = false;
+    }
   }
 
   const directionChangedLeft = keys.left !== entity.keys.left && keys.left;
