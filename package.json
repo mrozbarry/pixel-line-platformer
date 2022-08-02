@@ -1,0 +1,20 @@
+{
+  "name": "platformer",
+  "version": "1.0.0",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "parcel ./src/index.html",
+    "test": "ava"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "composable-state": "^0.0.2",
+    "declarativas": "^0.0.1-beta.15",
+    "parcel": "^2.6.2"
+  },
+  "devDependencies": {
+    "ava": "^4.3.1"
+  }
+}
