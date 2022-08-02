@@ -39,7 +39,7 @@ export const step = (timestep, gravity, gameMap, entity) => {
     x: entity.p.x + (entity.v.x * timestep / 10),
     y: entity.p.y + (entity.v.y * timestep / 10),
   };
-  const horizontalMovement = (Number(keys.right) - Number(keys.left)) * 0.3 * timestep / 10;
+  const horizontalMovement = entity.onGround ? (Number(keys.right) - Number(keys.left)) * 0.3 * timestep / 10 : 0;
   const v = {
     x: Math.max(Math.min(entity.v.x + horizontalMovement / (timestep / 10), MAX_SPEED), -MAX_SPEED),
     y: entity.v.y + (gravity * timestep / 10) / (2 * timestep / 10),
