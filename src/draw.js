@@ -29,6 +29,7 @@ export const draw = (state) => {
     [
       c('save'),
       c('imageSmoothingEnabled', { value: false }),
+      c('clearRect', { x: 0, y: 0, width: canvasSize.x, height: canvasSize.y }),
       c('rotate', { value: rotate }),
       c('translate', translate),
       c('scale', { x: scale, y: scale }),
