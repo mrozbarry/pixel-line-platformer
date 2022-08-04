@@ -1,4 +1,5 @@
 import * as Entity from './entity.js';
+import * as CollisionMap from './collisionMap.js';
 
 export const init = (input, level, assets, canvas) => ({
   frame: {
@@ -15,5 +16,6 @@ export const init = (input, level, assets, canvas) => ({
   entities: [
     Entity.make('player', input),
   ],
+  geometries: CollisionMap.geometriesFromLevel(level),
   projectiles: [],
 });

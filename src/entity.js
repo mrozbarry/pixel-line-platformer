@@ -1,3 +1,5 @@
+import * as CollisionMap from './collisionMap.js';
+
 const groundTiles = [3, 4, 5, 6, 7, 8, 9, 19, 20, 21, 22, 27, 28];
 const edgeTiles = [23, 24, 25, 26];
 
@@ -32,7 +34,7 @@ const getGameMapPosition = (p) => ({
   y: Math.floor(p.y / 16),
 });
 
-export const step = (timestep, gravity, gameMap, entity) => {
+export const step = (timestep, gravity, gameMap, geometries, entity) => {
   const keys = entity.controller.read(gameMap, entity);
   const pp = { ...entity.p };
   const p = {
@@ -60,49 +62,50 @@ export const step = (timestep, gravity, gameMap, entity) => {
     v.y = 0;
   }
 
+  const collisions = CollisionMap.test(geometries, { p });
+  const collision = collisions.find(c => (
+    p.y >= c.topLeft.y && p.y <= c.bottomRight.y
+  ));
+
   const previous = getGameMapPosition(pp);
   const current = getGameMapPosition(p);
 
-  if (gameMap[current.y] && gameMap[previous.y] && v.y > 0 && !onGround) {
-    const currentTile = gameMap[current.y][current.x];
-    const previousTile = gameMap[previous.y][previous.x];
-    if (groundTiles.includes(currentTile) && !groundTiles.includes(previousTile)) {
-      onGround = true;
-      v.y = 0;
-      p.y = current.y * 16;
-    }
-  } else if(!gameMap[current.y] && v.y > 0) {
-    console.log('grounded');
+  if (collision && p.y >= collision.topLeft.y && p.y <= collision.bottomRight.y && v.y > 0 && !onGround) {
+    console.log('collision')
+    onGround = true;
+    isJumping = false;
+    v.y = 0;
+    p.y = collision.topLeft.y;
+  } else if(p.y >= 16*16) {
     v.y = 0;
     p.y = gameMap.length * 16;
     onGround = true;
     isJumping = false;
+  } else if (!collision) {
+    onGround = false;
   }
 
   if (onGround && keys.up && !entity.keys.up) {
-    console.log('jump', v);
     onGround = false;
     isJumping = true;
   }
   if (isJumping && keys.up) {
-    console.log('jumping');
     v.y -= (0.08 * timestep / 10);
   }
   if (isJumping && (!keys.up || v.y < -0.8)) {
-    console.log('jumping done');
     isJumping = false;
   }
-  if (gameMap[current.y] && gameMap[previous.y] && onGround && (keys.left || keys.right)) {
-    const currentTile = gameMap[current.y][current.x];
-    const previousTile = gameMap[previous.y][previous.x];
-    if (groundTiles.includes(currentTile) && !groundTiles.includes(previousTile)) {
-      onGround = true;
-      v.y = 0;
-      p.y = current.y * 16;
-    } else {
-      onGround = false;
-    }
-  }
+  // if (gameMap[current.y] && gameMap[previous.y] && onGround && (keys.left || keys.right)) {
+  //   const currentTile = gameMap[current.y][current.x];
+  //   const previousTile = gameMap[previous.y][previous.x];
+  //   if (groundTiles.includes(currentTile) && !groundTiles.includes(previousTile)) {
+  //     onGround = true;
+  //     v.y = 0;
+  //     p.y = current.y * 16;
+  //   } else {
+  //     onGround = false;
+  //   }
+  // }
 
   const directionChangedLeft = keys.left !== entity.keys.left && keys.left;
   const directionChangedRight = keys.right !== entity.keys.right && keys.right;

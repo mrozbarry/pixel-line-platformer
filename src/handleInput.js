@@ -21,7 +21,13 @@ export const handleInput = (now, state) => {
         accumulator: replace(old => old - currentState.frame.rate),
         number: replace(old => old + 1),
       }),
-      entities: map(replace(entity => Entity.step(currentState.frame.rate, 0.098, currentState.level, entity))),
+      entities: map(replace(entity => Entity.step(
+        currentState.frame.rate,
+        0.1,
+        currentState.level,
+        currentState.geometries,
+        entity,
+      ))),
     }));
   }
 
