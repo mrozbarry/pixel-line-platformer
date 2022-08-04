@@ -3,10 +3,16 @@ export const KEYBOARD_KEYMAP = {
   ArrowDown: 'down',
   ArrowLeft: 'left',
   ArrowRight: 'right',
+
   w: 'up',
   s: 'down',
   a: 'left',
   d: 'right',
+
+  j: 'up',
+  k: 'down',
+  h: 'left',
+  l: 'right',
 };
 
 export const keyboard = (keymap = KEYBOARD_KEYMAP) => {

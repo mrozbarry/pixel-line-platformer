@@ -1,5 +1,5 @@
 const groundTiles = [3, 4, 5, 6, 7, 8, 9, 19, 20, 21, 22, 27, 28];
-const edgeTiles = [23, 24, 25, 26];
+// const edgeTiles = [23, 24, 25, 26];
 
 const collidable = (topLeft, size, type) => ({
   type,

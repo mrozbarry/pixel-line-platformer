@@ -1,8 +1,5 @@
 import * as CollisionMap from './collisionMap.js';
 
-const groundTiles = [3, 4, 5, 6, 7, 8, 9, 19, 20, 21, 22, 27, 28];
-const edgeTiles = [23, 24, 25, 26];
-
 export const make = (id, controller) => ({
   id,
   controller,
@@ -27,12 +24,7 @@ export const make = (id, controller) => ({
   isJumping: false,
 });
 
-const MAX_SPEED = 1.5
-
-const getGameMapPosition = (p) => ({
-  x: Math.floor(p.x / 16),
-  y: Math.floor(p.y / 16),
-});
+const MAX_SPEED = 1
 
 export const step = (timestep, gravity, gameMap, geometries, entity) => {
   const keys = entity.controller.read(gameMap, entity);
@@ -67,11 +59,7 @@ export const step = (timestep, gravity, gameMap, geometries, entity) => {
     p.y >= c.topLeft.y && p.y <= c.bottomRight.y
   ));
 
-  const previous = getGameMapPosition(pp);
-  const current = getGameMapPosition(p);
-
   if (collision && p.y >= collision.topLeft.y && p.y <= collision.bottomRight.y && v.y > 0 && !onGround) {
-    console.log('collision')
     onGround = true;
     isJumping = false;
     v.y = 0;
@@ -95,17 +83,6 @@ export const step = (timestep, gravity, gameMap, geometries, entity) => {
   if (isJumping && (!keys.up || v.y < -0.8)) {
     isJumping = false;
   }
-  // if (gameMap[current.y] && gameMap[previous.y] && onGround && (keys.left || keys.right)) {
-  //   const currentTile = gameMap[current.y][current.x];
-  //   const previousTile = gameMap[previous.y][previous.x];
-  //   if (groundTiles.includes(currentTile) && !groundTiles.includes(previousTile)) {
-  //     onGround = true;
-  //     v.y = 0;
-  //     p.y = current.y * 16;
-  //   } else {
-  //     onGround = false;
-  //   }
-  // }
 
   const directionChangedLeft = keys.left !== entity.keys.left && keys.left;
   const directionChangedRight = keys.right !== entity.keys.right && keys.right;
