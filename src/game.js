@@ -17,6 +17,7 @@ const frame = state => now => {
 const onResize = () => {
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
+  console.log('canvas resize', canvas.width, canvas.height);
 };
 
 Promise.all([

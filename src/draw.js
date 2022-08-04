@@ -4,25 +4,33 @@ const SCALE = 1.5;
 
 export const draw = (state) => {
   const levelSize = {
-    x: state.level.length * 16,
-    y: state.level[0].length * 16,
+    x: state.level[0].length * 16,
+    y: state.level.length * 16,
   };
   const canvasSize = {
-    x: state.canvas.width,
-    y: state.canvas.height,
+    x: window.innerWidth,
+    y: window.innerHeight,
   };
 
+  const yScale = canvasSize.y / levelSize.y
   let scale = SCALE;
-  if (canvasSize.x > canvasSize.y) {
-    scale = canvasSize.x / levelSize.x / 2;
-  } else {
-    scale = canvasSize.y / levelSize.y / 2;
-  }
+  let rotate = 0;
+  let translate = { x: 0, y: 0 };
+  if (canvasSize.x >= canvasSize.y) {
+    scale = canvasSize.x / levelSize.x;
+  } /*else if (canvasSize.y > canvasSize.x && canvasSize.x < 2048) {
+    scale = yScale;
+    rotate = 90 * Math.PI / 180;
+    translate = { x: 0, y: -canvasSize.x };
+  }*/
 
   render(
     state.canvas.getContext('2d'),
     [
       c('save'),
+      c('imageSmoothingEnabled', { value: false }),
+      c('rotate', { value: rotate }),
+      c('translate', translate),
       c('scale', { x: scale, y: scale }),
       state.level.map((row, y) => row.map((cell, x) => state.assets.render({ index: cell, x: 16 * x, y: 16 * y }))),
       state.entities.map(e => [
