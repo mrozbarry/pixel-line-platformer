@@ -26,6 +26,7 @@ export const handleInput = (now, state) => {
         0.1,
         currentState.level,
         currentState.geometries,
+        currentState.entities,
         entity,
       ))),
     }));

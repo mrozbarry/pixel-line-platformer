@@ -1,28 +1,43 @@
 import { render, c } from 'declarativas';
+import { TILE_SIZE, tiles, levelSize } from './config.js';
+import * as Entity from './entity.js';
 
 const SCALE = 1.5;
 
 export const draw = (state) => {
-  const levelSize = {
-    x: state.level[0].length * 16,
-    y: state.level.length * 16,
-  };
   const canvasSize = {
     x: window.innerWidth,
     y: window.innerHeight,
   };
 
-  const yScale = canvasSize.y / levelSize.y
   let scale = SCALE;
   let rotate = 0;
   let translate = { x: 0, y: 0 };
   if (canvasSize.x >= canvasSize.y) {
     scale = canvasSize.x / levelSize.x;
-  } /*else if (canvasSize.y > canvasSize.x && canvasSize.x < 2048) {
-    scale = yScale;
-    rotate = 90 * Math.PI / 180;
-    translate = { x: 0, y: -canvasSize.x };
-  }*/
+  }
+
+  const player = state.entities.find(e => e.id === 'player');
+
+  const halfScreen = {
+    x: (tiles.x / 2) * TILE_SIZE,
+    y: (tiles.y / 2) * TILE_SIZE,
+
+  };
+
+  const cameraMin = {
+    x: halfScreen.x,
+    y: halfScreen.y,
+  };
+  const cameraMax = {
+    x: (state.level[0].length * TILE_SIZE) - halfScreen.x,
+    y: (state.level.length * TILE_SIZE) - (halfScreen.y * 2),
+  };
+
+  const camera = {
+    x: halfScreen.x - Math.max(Math.min(player.p.x, cameraMax.x), cameraMin.x),
+    y: halfScreen.y - Math.max(Math.min(player.p.y, cameraMax.y), cameraMin.y),
+  };
 
   render(
     state.canvas.getContext('2d'),
@@ -33,14 +48,19 @@ export const draw = (state) => {
       c('rotate', { value: rotate }),
       c('translate', translate),
       c('scale', { x: scale, y: scale }),
-      state.level.map((row, y) => row.map((cell, x) => state.assets.render({ index: cell, x: 16 * x, y: 16 * y }))),
+      c('translate', {
+        x: camera.x,
+        y: camera.y,
+      }),
+      state.level.map((row, y) => row.map((cell, x) => state.assets.render({
+        index: cell,
+        x: TILE_SIZE * x, y: TILE_SIZE * y,
+      }))),
       state.entities.map(e => [
         state.assets.render({
-          index: !e.onGround
-            ? 41
-            : 40 + (e.v.x !== 0 ? Math.floor((state.frame.number % 10) / 5) : 0),
-          x: e.p.x - 8,
-          y: e.p.y - 16,
+          index: Entity.animate(state.frame.number, e),
+          x: e.p.x - (TILE_SIZE / 2),
+          y: e.p.y - TILE_SIZE,
           mirror: e.mirror,
         }),
       ]),

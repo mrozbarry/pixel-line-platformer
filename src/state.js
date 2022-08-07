@@ -1,5 +1,6 @@
 import * as Entity from './entity.js';
 import * as CollisionMap from './collisionMap.js';
+import * as Bee from './ai/bee.js';
 
 export const init = (input, level, assets, canvas) => ({
   frame: {
@@ -15,6 +16,10 @@ export const init = (input, level, assets, canvas) => ({
   canvas,
   entities: [
     Entity.make('player', input),
+    Entity.position(
+      { x: 200, y: 250 },
+      Entity.make('bee0', Bee.make(), true, Entity.BEE_ANIMATIONS),
+    ),
   ],
   geometries: CollisionMap.geometriesFromLevel(level),
   projectiles: [],
