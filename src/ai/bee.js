@@ -72,6 +72,9 @@ const read = (aiState) => {
         });
       }, target ? 3000 : 0);
     }
+    if (aiState.followingEntityId && dist > 100 && Math.random() > 0.5) {
+      aiState.followingEntityId = null;
+    }
 
     if (Math.random() > 0.6) {
       return {
