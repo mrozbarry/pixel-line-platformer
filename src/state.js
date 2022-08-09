@@ -20,7 +20,16 @@ export const init = (input, level, assets, canvas) => ({
       { x: 200, y: 250 },
       Entity.maxSpeed(0.3, Entity.make('bee0', Bee.make(), true, Entity.BEE_ANIMATIONS)),
     ),
+    Entity.position(
+      { x: 200, y: 250 },
+      Entity.maxSpeed(0.3, Entity.make('bee0', Bee.make(), true, Entity.BEE_ANIMATIONS)),
+    ),
+    Entity.position(
+      { x: 200, y: 250 },
+      Entity.maxSpeed(0.3, Entity.make('bee0', Bee.make(), true, Entity.BEE_ANIMATIONS)),
+    ),
   ],
   geometries: CollisionMap.geometriesFromLevel(level),
   projectiles: [],
+  darkness: 0.0,
 });

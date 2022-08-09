@@ -39,31 +39,45 @@ export const draw = (state) => {
     y: halfScreen.y - Math.max(Math.min(player.p.y, cameraMax.y), cameraMin.y),
   };
 
+  const transform = (children) => [
+    c('save'),
+    c('rotate', { value: rotate }),
+    c('translate', translate),
+    c('scale', { x: scale, y: scale }),
+    c('translate', {
+      x: camera.x,
+      y: camera.y,
+    }),
+    children,
+    c('restore'),
+  ];
+
   render(
     state.canvas.getContext('2d'),
     [
       c('save'),
       c('imageSmoothingEnabled', { value: false }),
       c('clearRect', { x: 0, y: 0, width: canvasSize.x, height: canvasSize.y }),
-      c('rotate', { value: rotate }),
-      c('translate', translate),
-      c('scale', { x: scale, y: scale }),
-      c('translate', {
-        x: camera.x,
-        y: camera.y,
-      }),
-      state.level.map((row, y) => row.map((cell, x) => state.assets.render({
-        index: cell,
-        x: TILE_SIZE * x, y: TILE_SIZE * y,
-      }))),
-      state.entities.map(e => [
-        state.assets.render({
-          index: Entity.animate(state.frame.number, e),
-          x: e.p.x - (TILE_SIZE / 2),
-          y: e.p.y - TILE_SIZE,
-          mirror: e.mirror,
-        }),
-      ]),
+      transform(
+        state.level.map((row, y) => row.map((cell, x) => state.assets.render({
+          index: cell,
+          x: TILE_SIZE * x, y: TILE_SIZE * y,
+        })))
+      ),
+      state.darkness > 0 && [
+        c('fillStyle', { value: `rgba(0, 0, 0, ${1.0 - state.darkness})` }),
+        c('fillRect', { x: 0, y: 0, width: state.canvas.width, height: state.canvas.height }),
+      ],
+      transform(
+        state.entities.map(e => [
+          state.assets.render({
+            index: Entity.animate(state.frame.number, e),
+            x: e.p.x - (TILE_SIZE / 2),
+            y: e.p.y - TILE_SIZE,
+            mirror: e.mirror,
+          }),
+        ])
+      ),
       c('restore'),
     ],
   );

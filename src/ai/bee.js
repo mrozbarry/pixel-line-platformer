@@ -27,7 +27,7 @@ const read = (aiState) => {
   return (_geometries, entities, level, entity) => {
     aiState.frame += 1;
 
-    if (!aiState.angryAt) {
+    if (!aiState.followingEntityId) {
       const targetEntity = entities
         .filter(e => e !== entity)
         .filter(e => e.id === 'player')
@@ -35,15 +35,15 @@ const read = (aiState) => {
         .sort(e => e.dist)[0];
 
       if (targetEntity.dist <= 32) {
-        aiState.angryAt = targetEntity.id;
+        aiState.followingEntityId = targetEntity.id;
         entity.maxSpeed *= 1.8;
         clearTimeout(aiState.handle);
 
         aiState.target = (list) => {
           const e = list.find(e => e.id === targetEntity.id);
           return {
-            x: e.p.x,
-            y: e.p.y - (TILE_SIZE / 2),
+            x: e.p.x + (Math.random() * (TILE_SIZE / 4)) - (TILE_SIZE / 2),
+            y: e.p.y - (TILE_SIZE / 2) + (Math.random() * (TILE_SIZE / 4)) - (TILE_SIZE / 2),
           };
         };
       }
@@ -51,24 +51,35 @@ const read = (aiState) => {
 
     const target = aiState.target(entities);
 
-    const tolerance = TILE_SIZE / 2;
+    const tolerance = aiState.followingEntityId
+      ? (TILE_SIZE * (1 + Math.random()))
+      : (TILE_SIZE / 3);
 
     const diffX = target ? target.x - entity.p.x : 0;
     const dx = Math.abs(diffX);
     const diffY = target ? target.y - entity.p.y : 0;
     const dy = Math.abs(diffY);
     const dist = Math.sqrt((diffX * diffX) + (diffY * diffY));
-    if (!aiState.isAngry && (!target || dist < tolerance)) {
+    if (!aiState.followingEntityId && (!target || dist < tolerance)) {
       const flowers = getTargetList(level);
       const flower = flowers[Math.floor(Math.random() * flowers.length)];
 
       aiState.timeout = setTimeout(() => {
-        if (aiState.angryAt) return;
+        if (aiState.followingEntityId) return;
         aiState.target = () => ({
           x: flower.x + (TILE_SIZE / 2),
           y: flower.y + (TILE_SIZE / 2),
         });
-      }, 3000);
+      }, target ? 3000 : 0);
+    }
+
+    if (Math.random() > 0.6) {
+      return {
+        up: false,
+        down: false,
+        left: false,
+        right: false,
+      };
     }
 
     const up = (dy > tolerance) && diffY < tolerance;
@@ -89,7 +100,7 @@ export const make = (initialState = {}) => ({
   read: read({
     ...initialState,
     target: () => null,
-    angryAt: null,
+    followingEntityId: null,
     frame: 0,
   }),
 });
