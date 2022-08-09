@@ -47,7 +47,7 @@ export const load = async (canvas) => {
         'drawImage',
         {
           image,
-          source: { ...tileData[props.index], width: tileSize, height: tileSize },
+          source: { ...tileData[props.index], width: tileSize - 1, height: tileSize },
           destination: { x: props.mirror ? -tileSize : 0, y: 0, width: tileSize, height: tileSize },
         },
       ),

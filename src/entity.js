@@ -52,6 +52,7 @@ export const make = (id, controller, isFlying = false, animations = PLAYER_UNARM
   animations,
   frameSkip: 10,
   frameScale: 5,
+  maxSpeed: 1,
 
   p: {
     x: 0,
@@ -75,10 +76,10 @@ export const position = ({ x, y }, entity) => ({
   v: { x: 0, y: 0 },
 });
 
-const MAX_SPEED = 1
+export const maxSpeed = (maxSpeed, entity) => ({ ...entity, maxSpeed });
 
 export const step = (timestep, gravity, level, geometries, entities, entity) => {
-  const keys = entity.controller.read(geometries, entities, entity.keys, entity);
+  const keys = entity.controller.read(geometries, entities, level, entity);
   const p = {
     x: entity.p.x + (entity.v.x * timestep / 10),
     y: entity.p.y + (entity.v.y * timestep / 10),
@@ -88,18 +89,22 @@ export const step = (timestep, gravity, level, geometries, entities, entity) => 
   const localGravity = entity.onGround ? 0 : gravity;
   const v = entity.isFlying
     ? {
-      x: Math.max(Math.min(entity.v.x + horizontalMovement / (timestep / 10), MAX_SPEED), -MAX_SPEED),
-      y: Math.max(Math.min(entity.v.y + verticalMovement + localGravity / (timestep / 10), MAX_SPEED), -MAX_SPEED),
+      x: Math.max(Math.min(entity.v.x + (horizontalMovement * timestep / 10), entity.maxSpeed), -entity.maxSpeed),
+      y: Math.max(Math.min(entity.v.y + ((verticalMovement + (localGravity / 5)) * timestep / 10), entity.maxSpeed), -entity.maxSpeed),
     }
     : {
-      x: Math.max(Math.min(entity.v.x + horizontalMovement / (timestep / 10), MAX_SPEED), -MAX_SPEED),
+      x: Math.max(Math.min(entity.v.x + horizontalMovement / (timestep / 10), entity.maxSpeed), -entity.maxSpeed),
       y: Math.max(Math.min(entity.v.y + (localGravity * timestep / 10) / (2 * timestep / 10), 5), -5),
     };
   let onGround = entity.onGround;
   let isJumping =  entity.isJumping;
 
+
   if (!keys.left && !keys.right) {
     v.x *= 0.8;
+  }
+  if (entity.isFlying && !(keys.left || keys.right)) {
+    v.y *= 0.8;
   }
   if (!onGround) {
     v.x *= 0.98;

@@ -18,7 +18,7 @@ export const init = (input, level, assets, canvas) => ({
     Entity.make('player', input),
     Entity.position(
       { x: 200, y: 250 },
-      Entity.make('bee0', Bee.make(), true, Entity.BEE_ANIMATIONS),
+      Entity.maxSpeed(0.3, Entity.make('bee0', Bee.make(), true, Entity.BEE_ANIMATIONS)),
     ),
   ],
   geometries: CollisionMap.geometriesFromLevel(level),
