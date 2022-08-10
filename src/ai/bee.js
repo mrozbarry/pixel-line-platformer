@@ -36,7 +36,7 @@ const read = (aiState) => {
 
       if (targetEntity.dist <= 32) {
         aiState.followingEntityId = targetEntity.id;
-        entity.maxSpeed *= 1.8;
+        entity.maxSpeed *= 1.2;
         clearTimeout(aiState.handle);
 
         aiState.target = (list) => {
@@ -72,11 +72,14 @@ const read = (aiState) => {
         });
       }, target ? 3000 : 0);
     }
-    if (aiState.followingEntityId && dist > 100 && Math.random() > 0.5) {
+    if (aiState.followingEntityId && dist > 72 && Math.random() > 0.2) {
+      console.log('bee lost interest');
       aiState.followingEntityId = null;
+      aiState.target = () => null;
+      entity.maxSpeed *= 0.8;
     }
 
-    if (Math.random() > 0.6) {
+    if (!aiState.followingEntityId && Math.random() > 0.6) {
       return {
         up: false,
         down: false,

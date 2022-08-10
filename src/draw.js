@@ -22,7 +22,6 @@ export const draw = (state) => {
   const halfScreen = {
     x: (tiles.x / 2) * TILE_SIZE,
     y: (tiles.y / 2) * TILE_SIZE,
-
   };
 
   const cameraMin = {
@@ -38,6 +37,22 @@ export const draw = (state) => {
     x: halfScreen.x - Math.max(Math.min(player.p.x, cameraMax.x), cameraMin.x),
     y: halfScreen.y - Math.max(Math.min(player.p.y, cameraMax.y), cameraMin.y),
   };
+
+  const topLeft = {
+    x: -camera.x - (2 * TILE_SIZE),
+    y: -camera.y - (3 * TILE_SIZE),
+  };
+  const bottomRight = {
+    x: -camera.x + (tiles.x * TILE_SIZE) + (2 * TILE_SIZE),
+    y: -camera.y + (tiles.y * TILE_SIZE) + (10 * TILE_SIZE),
+  };
+  const positionInBounds = ({ x, y }) => (
+    (topLeft.x <= x)
+      && (bottomRight.x >= x)
+      &&(topLeft.y <= y)
+      && (bottomRight.y >= y)
+  );
+  const entityInBounds = e => positionInBounds(e.p);
 
   const transform = (children) => [
     c('save'),
@@ -59,23 +74,26 @@ export const draw = (state) => {
       c('imageSmoothingEnabled', { value: false }),
       c('clearRect', { x: 0, y: 0, width: canvasSize.x, height: canvasSize.y }),
       transform(
-        state.level.map((row, y) => row.map((cell, x) => state.assets.render({
-          index: cell,
-          x: TILE_SIZE * x, y: TILE_SIZE * y,
-        })))
+        state.level
+        .map((row, y) => row.map((cell, x) => positionInBounds({ x: x * TILE_SIZE, y: y * TILE_SIZE }) && state.assets.render({
+            index: cell,
+            x: TILE_SIZE * x, y: TILE_SIZE * y,
+          })))
       ),
       state.darkness > 0 && [
         c('fillStyle', { value: `rgba(0, 0, 0, ${1.0 - state.darkness})` }),
         c('fillRect', { x: 0, y: 0, width: state.canvas.width, height: state.canvas.height }),
       ],
       transform(
-        state.entities.map(e => [
-          state.assets.render({
-            index: Entity.animate(state.frame.number, e),
-            x: e.p.x - (TILE_SIZE / 2),
-            y: e.p.y - TILE_SIZE,
-            mirror: e.mirror,
-          }),
+        state.entities
+          .filter(entityInBounds)
+          .map(e => [
+            state.assets.render({
+              index: Entity.animate(state.frame.number, e),
+              x: e.p.x - (TILE_SIZE / 2),
+              y: e.p.y - TILE_SIZE,
+              mirror: e.mirror,
+            }),
         ])
       ),
       c('restore'),
