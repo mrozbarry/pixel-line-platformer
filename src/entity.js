@@ -149,8 +149,8 @@ export const step = (timestep, gravity, level, geometries, entities, entity) => 
     if (p.x < 0) {
       p.x = 0;
     }
-    if (p.x > (level[0].length * TILE_SIZE)) {
-      p.x = level[0].length * TILE_SIZE;
+    if (p.x > (level.width * TILE_SIZE)) {
+      p.x = level.width * TILE_SIZE;
     }
   }
 

@@ -14,14 +14,14 @@ export const draw = (state) => {
   let rotate = 0;
   let translate = { x: 0, y: 0 };
   if (canvasSize.x >= canvasSize.y) {
-    scale = canvasSize.x / levelSize.x;
+    scale = (canvasSize.x / levelSize.x);
   }
 
   const player = state.entities.find(e => e.id === 'player');
 
   const halfScreen = {
-    x: (tiles.x / 2) * TILE_SIZE,
-    y: (tiles.y / 2) * TILE_SIZE,
+    x: ((tiles.x / 2) * TILE_SIZE),
+    y: ((tiles.y / 2) * TILE_SIZE),
   };
 
   const cameraMin = {
@@ -29,8 +29,8 @@ export const draw = (state) => {
     y: halfScreen.y,
   };
   const cameraMax = {
-    x: (state.level[0].length * TILE_SIZE) - halfScreen.x,
-    y: (state.level.length * TILE_SIZE) - (halfScreen.y * 2),
+    x: (state.level.width * TILE_SIZE) - halfScreen.x,
+    y: (state.level.height * TILE_SIZE) - (halfScreen.y * 2),
   };
 
   const camera = {
@@ -67,19 +67,39 @@ export const draw = (state) => {
     c('restore'),
   ];
 
+  const renderableTiles = state.level.tiles
+    .map((tileId, index) => ({
+      tileId,
+      y: Math.floor(index / state.level.width) * TILE_SIZE,
+      x: (index % state.level.width) * TILE_SIZE,
+    }))
+    .filter(positionInBounds);
+
   render(
     state.canvas.getContext('2d'),
     [
       c('save'),
       c('imageSmoothingEnabled', { value: false }),
-      c('clearRect', { x: 0, y: 0, width: canvasSize.x, height: canvasSize.y }),
+      c('fillStyle', { value: '#fcdfcd' }),
+      c('fillRect', { x: 0, y: 0, width: canvasSize.x, height: canvasSize.y }),
       transform(
-        state.level
-        .map((row, y) => row.map((cell, x) => positionInBounds({ x: x * TILE_SIZE, y: y * TILE_SIZE }) && state.assets.render({
-            index: cell,
-            x: TILE_SIZE * x, y: TILE_SIZE * y,
-          })))
+        renderableTiles
+          .map((tile) => {
+            return state.assets.render({
+              index: parseInt(tile.tileId),
+              x: Math.floor(tile.x),
+              y: Math.floor(tile.y),
+            });
+          }),
       ),
+      // transform(
+      //   state.level
+      //   .map((row, y) => row.map((cell, x) => positionInBounds({ x: x * TILE_SIZE, y: y * TILE_SIZE }) && state.assets.render({
+      //       index: cell,
+      //       x: Math.floor(TILE_SIZE * x),
+      //       y: Math.floor(TILE_SIZE * y),
+      //     })))
+      // ),
       state.darkness > 0 && [
         c('fillStyle', { value: `rgba(0, 0, 0, ${1.0 - state.darkness})` }),
         c('fillRect', { x: 0, y: 0, width: state.canvas.width, height: state.canvas.height }),
@@ -90,11 +110,18 @@ export const draw = (state) => {
           .map(e => [
             state.assets.render({
               index: Entity.animate(state.frame.number, e),
-              x: e.p.x - (TILE_SIZE / 2),
-              y: e.p.y - TILE_SIZE,
+              x: Math.floor(e.p.x - (TILE_SIZE / 2)),
+              y: Math.floor(e.p.y - TILE_SIZE),
               mirror: e.mirror,
             }),
         ])
+      ),
+      transform(
+        state.geometries
+          .map(g => [
+            c('strokeStyle', { value: '#f0f' }),
+            c('strokeRect', { x: g.topLeft.x, y: g.topLeft.y, width: g.size.x, height: g.size.y }),
+          ])
       ),
       c('restore'),
     ],

@@ -7,7 +7,11 @@ const entityDistance = (a, b) => {
 };
 
 const possibleTargets = tileIds => level => {
-  return level.reduce((targets, row, y) => {
+  return level.tiles.reduce((targets, tileId, index) => {
+    if (!tileIds.includes(tileId)) {
+      return targets;
+    }
+    return targets.concat({ x: index % level.width, y: Math.floor(index / level.width) });
     return [
       ...targets,
       ...row.reduce((rowTargets, rowTileId, x) => {
@@ -62,6 +66,14 @@ const read = (aiState) => {
     const dist = Math.sqrt((diffX * diffX) + (diffY * diffY));
     if (!aiState.followingEntityId && (!target || dist < tolerance)) {
       const flowers = getTargetList(level);
+      if (flowers.length === 0) {
+        return {
+          up: entity.v.y > 0,
+          down: false,
+          left: false,
+          right: false,
+        }
+      }
       const flower = flowers[Math.floor(Math.random() * flowers.length)];
 
       aiState.timeout = setTimeout(() => {

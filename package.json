@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "start": "parcel ./src/index.html",
+    "start": "parcel serve ./src/index.html",
     "build": "parcel build ./src/index.html",
     "test": "ava"
   },
@@ -12,7 +12,7 @@
   "dependencies": {
     "composable-state": "^0.0.2",
     "declarativas": "^0.0.1-beta.15",
-    "parcel": "^2.6.2"
+    "parcel": "^2.9.3"
   },
   "devDependencies": {
     "ava": "^4.3.1"

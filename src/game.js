@@ -1,6 +1,8 @@
 import './debug.js';
 import * as Assets from './assets.js';
 import * as HandbombedLevel from './level/handbombed.js';
+import * as Level from './level.js';
+import * as Rules from './level/rules.js';
 import * as Input from './input.js';
 import * as State from './state.js';
 import { draw } from './draw.js';
@@ -22,10 +24,13 @@ const onResize = () => {
 
 Promise.all([
   Assets.load(canvas).then(debug('loaded assets')),
+  Level.generate(10, 10, Rules)
 ])
   .then(([
-    assets
+    assets,
+    level,
   ]) => {
+    console.log('level', level);
     onResize();
     window.addEventListener('resize', debounce(onResize, 250));
 
@@ -35,7 +40,8 @@ Promise.all([
     requestAnimationFrame(
       frame(State.init(
         input,
-        HandbombedLevel.tiles,
+        level,
+        // HandbombedLevel.tiles,
         assets,
         canvas,
       )),

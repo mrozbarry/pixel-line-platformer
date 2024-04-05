@@ -1,115 +1,98 @@
 import { union, randomItem } from './lib/array.js';
 
-const DIRECTIONS = ['t', 'b', 'l', 'r'];
-const OPPOSITES = {
-  t: 'b',
-  b: 't',
-  l: 'r',
-  r: 'l',
-};
+const pipeline = (steps, init) => steps.reduce(async (memo, step) => step(await memo), init);
 
-export const empty = (width, height) => (
-  Array.from({ length: height }, () => Array.from({ length: width }, () => null))
-);
+const inBounds = (x, y, gameMap) => {
+  const xInBounds = x >= 0 || x <= gameMap.width;
+  const yInBounds = y >= 0 || y <= gameMap.height;
+  return xInBounds && yInBounds;
+}
 
-export const each = (callback, gameMap) => {
-  for(let y = 0; y < gameMap.length; y++) {
-    const row = gameMap[y];
-    for(let x = 0; x < row.length; x++) {
-      callback(row[x], { x, y }, gameMap);
-    }
+const coordsToIndex = (x, y, gameMap) => {
+  if (!inBounds(x, y, gameMap)) {
+    return -1;
   }
-  return null;
+  return (y * gameMap.width) + x;
+}
+
+const neighbours = (x, y, gameMap) => {
+  return [
+    { name: 'left', x: x - 1, y }, // left
+    { name: 'up', x, y: y - gameMap.width }, // up
+    { name: 'right', x: x + 1, y }, // right
+    { name: 'down', x, y: y + gameMap.width }, // down
+  ]
+    .filter(p => inBounds(p.x, p.y, gameMap))
+    .map(p => ({ ...p, index: coordsToIndex(p.x, p.y, gameMap) }));
 };
 
-export const find = (criteria, gameMap) => {
-  for(let y = 0; y < gameMap.length; y++) {
-    const row = gameMap[y];
-    for(let x = 0; x < row.length; x++) {
-      if (criteria(row[x], { x, y })) {
-        return { x, y, cell: gameMap[y][x] };
-      }
-    }
+const inversions = {
+  left: 'right',
+  up: 'down',
+  right: 'left',
+  down: 'up',
+};
+
+const placeTile = (x, y, tileId, gameMap) => {
+  const index = coordsToIndex(x, y, gameMap);
+  if (index === -1 || gameMap.tiles[index] !== null) {
+    return gameMap;
   }
-  return null;
-};
-
-export const map = (transformer, gameMap) => {
-  const copy = JSON.parse(JSON.stringify(gameMap));
-  for(let y = 0; y < gameMap.length; y++) {
-    const row = gameMap[y];
-    for(let x = 0; x < row.length; x++) {
-      copy[y][x] = transformer(row[x], { x, y }, gameMap);
-    }
-  }
-  return copy;
-};
-
-export const isComplete = (gameMap) => !find(c => c === null, gameMap);
-
-export const findNextGenerateTarget = (Rules, gameMap) => {
-  const candidates = [];
-
-  each((cell, { x, y }) => {
-    if (cell !== null) return;
-    const neighbours = findNeighbours({ x, y }, gameMap);
-    const possible = DIRECTIONS.reduce((tiles, d) => {
-      const neighbour = neighbours[d];
-      if (neighbour.tile === null) return tiles;
-
-      const ruleTiles = Rules.connectors[neighbour.tile][OPPOSITES[d]];
-      return union(tiles, ruleTiles);
-    }, Rules.all);
-
-    candidates.push({ x, y, possible, count: possible.length });
-  }, gameMap);
-
-  candidates.sort((a, b) => a.count > b.count);
-  return candidates[0];
-};
-
-export const findNeighbours = ({ x, y }, gameMap) => {
-  const up = gameMap[y - 1];
-  const down = gameMap[y + 1];
-
-  return {
-    t: { x, y: y - 1, tile: up ? up[x] : null },
-    b: { x, y: y + 1, tile: down ?  down[x] : null },
-    l: { x: x - 1, y, tile: gameMap[y][x - 1] || null },
-    r: { x: x + 1, y, tile: gameMap[y][x + 1] || null },
-  };
-};
-
-const placeTile = (target, gameMap) => {
-  let nextGameMap = JSON.parse(JSON.stringify(gameMap));
-
-  const tile = target.possible.length > 1 ? randomItem(target.possible) : target.possible[0];
-  nextGameMap[target.y][target.x] = tile;
-
-  return nextGameMap;
-};
-
-export const generate = (width, height, Rules) => {
-  let gameMap = empty(width, height);
-
-  const startTime = Date.now();
-
-  while (!isComplete(gameMap)) {
-    const target = findNextGenerateTarget(Rules, gameMap);
-    console.log('generate.loop', target);
-    if (!target) {
-      console.log('no target', gameMap);
-      break;
-    }
-
-    const nextGameMap = placeTile(target, gameMap);
-
-    gameMap = nextGameMap;
-
-    if (Date.now() - startTime > 5000) {
-      console.error('too long to generate');
-      break;
-    }
-  }
+  gameMap.tiles[index] = tileId;
   return gameMap;
+};
+
+const recursivelySetTile = (x, y, gameMap) => {
+  const index = coordsToIndex(x, y, gameMap);
+  if (index === -1) {
+    return gameMap;
+  }
+
+  if (gameMap.tiles[index] !== null) {
+    return gameMap;
+  }
+
+  const neighbours = [
+    { name: 'left', x: x - 1, y },
+    { name: 'up', x, y: y - 1 },
+    { name: 'right', x: x + 1, y },
+    { name: 'down', x, y: y + 1 },
+  ];
+
+  const tiles = gameMap.rules.potentialTiles({
+    left: gameMap.tiles[coordsToIndex(x - 1, y, gameMap)],
+    up: gameMap.tiles[coordsToIndex(x, y -1, gameMap)],
+    right: gameMap.tiles[coordsToIndex(x + 1, y, gameMap)],
+    down: gameMap.tiles[coordsToIndex(x, y + 1, gameMap)],
+  });
+
+  placeTile(x, y, tiles[Math.floor(Math.random() * tiles.length)], gameMap);
+
+  return pipeline(
+    neighbours.map(
+      n => g => recursivelySetTile(n.x, n.y, g)
+    ),
+    gameMap,
+  );
+};
+
+export const generate = (width, height, rules, seed = null) => {
+  seed = seed === null
+    ? Math.floor(Math.random() * 100)
+    : parseInt(seed);
+
+  return pipeline([
+    g => placeTile(g.startPosition.x, g.startPosition.y, 9, g, false),
+    async (g) => await recursivelySetTile(g.startPosition.x, g.startPosition.y - 1, g),
+  ], {
+    rules,
+    width,
+    height,
+    seed,
+    tiles: Array.from({ length: width * height }, () => null),
+    startPosition: {
+      x: Math.floor(width / 2),
+      y: Math.floor(height / 2),
+    },
+  });
 };

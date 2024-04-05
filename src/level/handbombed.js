@@ -8,7 +8,7 @@ export const player = {
 const looper = (times) => (row) => Array.from({ length: times }, () => null)
   .reduce((output) => output.concat(row), []);
 
-const loop = looper(5);
+const loop = looper(2);
 
 export const tiles = [
   // [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],

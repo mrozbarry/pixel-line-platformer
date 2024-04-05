@@ -16,9 +16,19 @@ export const init = (input, level, assets, canvas) => ({
   assets,
   canvas,
   entities: [
-    Entity.make('player', input),
-    ...Array.from({ length: 50 }, (_, index) => Entity.position(
-      { x: Math.random() * (level[0].length * TILE_SIZE), y: Math.random() * (level.length * TILE_SIZE) },
+    Entity.position(
+      {
+        x: level.startPosition.x * TILE_SIZE,
+        y: level.startPosition.y * TILE_SIZE,
+      },
+      Entity.make('player', input),
+    ),
+    ...Array.from({ length: 5 }, (_, index) => Entity.position(
+      {
+        x: Math.random() * level.width * TILE_SIZE,
+        y: Math.random() * level.height * TILE_SIZE,
+      },
+      // { x: Math.random() * (level[0].length * TILE_SIZE), y: Math.random() * (level.length * TILE_SIZE) },
       Entity.maxSpeed(0.3, Entity.make(`bee${index}`, Bee.make(), true, Entity.BEE_ANIMATIONS)),
     )),
   ],

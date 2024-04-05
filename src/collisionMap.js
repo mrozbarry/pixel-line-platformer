@@ -11,6 +11,7 @@ const collidable = (topLeft, size, type) => ({
     x: Math.floor(topLeft.x + size.x),
     y: Math.floor(topLeft.y + size.y),
   },
+  size,
 });
 
 const TYPE_GEOMETRY = 'geometry';
@@ -23,34 +24,45 @@ const entity = (bottomMiddle, size = { x: 16, y: 16 }) => collidable({
 }, size, TYPE_ENTITY);
 
 export const geometriesFromLevel = (level) => {
-  return level.reduce((geometries, row, y) => {
-    let groundStart = null;
-    for (let x = 0; x < row.length; x++) {
-      const tile = level[y][x];
-      if (groundStart === null && groundTiles.includes(tile)) {
-        groundStart = x;
-      }
-      if (groundStart !== null && !groundTiles.includes(tile)) {
+  let groundStart = null;
+  return level.tiles.reduce((geometries, tile, index) => {
+    const x = index % level.width;
+    const y = Math.floor(index / level.width);
+    const tileId = parseInt(tile);
+
+    if (index % level.width === 0) {
+      console.groupCollapsed('geometriesFromLevel.wrap');
+      if (groundStart >= 0) {
+        console.log('closing last geometry');
         geometries.push(geometry({
           x: groundStart * 16,
-          y: y * 16,
-        },
-          {
-          x: Math.abs(groundStart - x) * 16,
+          y: y - 1 * 16,
+        }, {
+          x: Math.abs(groundStart - level.width - 2) * 16,
           y: 6,
         }));
-        groundStart = null;
+      } else {
+        console.log('nothing to close');
       }
+      groundStart = null;
+      console.groupEnd('geometriesFromLevel.wrap');
     }
-    if (groundStart !== null) {
+
+    if (groundStart === null && groundTiles.includes(tileId)) {
+      groundStart = x;
+    }
+    if (groundStart !== null && !groundTiles.includes(tileId)) {
       geometries.push(geometry({
         x: groundStart * 16,
         y: y * 16,
-      }, {
-        x: Math.abs(groundStart - row.length - 2) * 16,
+      },
+        {
+        x: Math.abs(groundStart - x) * 16,
         y: 6,
       }));
+      groundStart = null;
     }
+
     return geometries;
   }, []);
 };
